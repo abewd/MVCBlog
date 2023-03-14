@@ -1,49 +1,36 @@
 const router = require("express").Router();
-// TODO: route the path of the comments
-const { Comment } = require();
-// TODO: route to utils and then authentication
-const withAuth = require("");
+const { comment } = require("../../models");
+const withAuth = require("../../utils");
 
-// Saving comments
+// Search function
 
-// Get through a request and response all the comments
 router.get("/", (req, res) => {
-  // find all the comments
   Comment.findAll({})
-    // and then put them in the variable commentData as a json
     .then((commentData) => res.json(commentData))
-    // If there is an issue then display it as a 500 error in json
     .catch((err) => {
       console.log(err);
       res.status(500).json(err);
     });
 });
 
-// Create a comment
+// Create a post
 
-// Request and respond
 router.post("/", withAuth, (req, res) => {
   if (req.session) {
     Comment.create({
-      // display that the credentials are needed
       comment_text: req.body.comment_text,
-      // request user id
       user_id: req.session.user_id,
-      // request user pw
       post_id: req.body.post_id,
     })
-      // then convert commentData to json
       .then((commentData) => res.json(commentData))
-      // dipslay errors if they occur
       .catch((err) => {
         console.log(err);
-        res.status(500).json(err);
+        res.status(400).json(err);
       });
   }
 });
 
-// Updating a comment
-
+// Update an existing comment
 router.put("/:id", withAuth, (req, res) => {
   Comment.update(
     {
@@ -57,7 +44,7 @@ router.put("/:id", withAuth, (req, res) => {
   )
     .then((commentData) => {
       if (!commentData) {
-        res.status(404).json({ message: "no comment found with this ID" });
+        res.status(404).json({ message: "No post found with this id" });
         return;
       }
       res.json(commentData);
@@ -68,20 +55,25 @@ router.put("/:id", withAuth, (req, res) => {
     });
 });
 
-// Deleting a comment
-// searching id with an id parameter as per other sessions
+// Delete a comment
+
 router.delete("/:id", withAuth, (req, res) => {
-  // destroy comment by ID
   Comment.destroy({
     where: {
       id: req.params.id,
     },
-    // if you cant find the comment via ID then display an error message
-  }).then((commentData) => {
-    if (!commentData) {
-      res.status(404).json({ message: "no comment found with this ID" });
-    }
-  });
+  })
+    .then((commentData) => {
+      if (!commentData) {
+        res.status(404).json({ message: "No comment found with this id!" });
+        return;
+      }
+      res.json(commentData);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 module.exports = router;
